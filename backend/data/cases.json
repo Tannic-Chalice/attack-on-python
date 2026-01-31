@@ -1,0 +1,123 @@
+{
+  "444": {
+    "case_id": "444",
+    "node_id": 444,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2025-12-31 18:38:33.239513",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.6584487378082748
+  },
+  "12": {
+    "case_id": "12",
+    "node_id": 12,
+    "status": "false_positive",
+    "severity": "High",
+    "created_at": "2026-01-01 07:47:58.091885",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [
+      {
+        "timestamp": "2026-01-01 16:45:58.104894",
+        "from_status": "open",
+        "to_status": "false_positive",
+        "note": "good "
+      }
+    ],
+    "risk_score": 0.7999737856451369
+  },
+  "198": {
+    "case_id": "198",
+    "node_id": 198,
+    "status": "confirmed_fraud",
+    "severity": "High",
+    "created_at": "2026-01-01 15:39:26.394417",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [
+      {
+        "timestamp": "2026-01-29 12:34:37.878509",
+        "from_status": "open",
+        "to_status": "confirmed_fraud",
+        "note": "CONFIRM FRAUD"
+      }
+    ],
+    "risk_score": 1.5061205421530832
+  },
+  "398": {
+    "case_id": "398",
+    "node_id": 398,
+    "status": "confirmed_fraud",
+    "severity": "High",
+    "created_at": "2026-01-01 15:47:20.640123",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [
+      {
+        "timestamp": "2026-01-01 16:45:48.214599",
+        "from_status": "open",
+        "to_status": "confirmed_fraud",
+        "note": "correct"
+      }
+    ],
+    "risk_score": 0.8046593390908551
+  },
+  "753": {
+    "case_id": "753",
+    "node_id": 753,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-02 10:07:00.367702",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.0273650711759306
+  },
+  "651": {
+    "case_id": "651",
+    "node_id": 651,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-09 07:51:09.074669",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.795452453055124
+  },
+  "77": {
+    "case_id": "77",
+    "node_id": 77,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-21 23:49:56.427277",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 0.9981713376745424
+  },
+  "535": {
+    "case_id": "535",
+    "node_id": 535,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-29 11:33:34.874520",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.43917375714667
+  },
+  "462": {
+    "case_id": "462",
+    "node_id": 462,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-31 11:13:57.312189",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.6232308510784517
+  },
+  "791": {
+    "case_id": "791",
+    "node_id": 791,
+    "status": "open",
+    "severity": "High",
+    "created_at": "2026-01-31 11:54:51.925229",
+    "initial_notes": "Manually flagged from Graph Dashboard",
+    "analyst_updates": [],
+    "risk_score": 1.6544062810732068
+  }
+}

@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+torch
+torch_geometric
+pandas
+numpy
+networkx
+scikit-learn
+fastapi-cors
+# Only install PyJWT for authentication
+pyjwt==2.8.0
+
+# Remove these if you installed them:
+# pip uninstall passlib bcrypt -y
+
+# Then reinstall just PyJWT:
+# pip install pyjwt
