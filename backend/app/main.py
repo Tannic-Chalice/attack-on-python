@@ -166,7 +166,7 @@ manager = ConnectionManager()
 @app.post("/generate_dataset")
 async def api_generate_dataset():
     try:
-        stats = data_generator.generate_synthetic_data()
+        stats = data_generator.generate_blockchain_aml_data()
         return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

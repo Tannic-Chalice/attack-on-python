@@ -1,169 +1,151 @@
 import pandas as pd
 import numpy as np
 import os
-from datetime import datetime, timedelta
 import random
+import uuid
+from datetime import datetime, timedelta
 
-# Configuration
-NUM_FEATURES = 16
+# ---------------- CONFIG ---------------- #
 
-# Create a directory for data if it doesn't exist
 DATA_DIR = "./data"
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR)
+os.makedirs(DATA_DIR, exist_ok=True)
 
 NODES_FILE = os.path.join(DATA_DIR, "nodes.csv")
 TRANSACTIONS_FILE = os.path.join(DATA_DIR, "transactions.csv")
 
-def generate_synthetic_data():
-    """
-    Generates and saves a synthetic dataset of nodes and transactions with temporal information.
-    """
-    
-    # Randomized config
-    NUM_NODES = random.randint(800, 1500)
-    NUM_TRANSACTIONS = random.randint(4000, 7000)
-    FRAUD_NODE_PERCENTAGE = random.uniform(0.04, 0.10)
+NUM_FEATURES = 8
+TIME_WINDOW_DAYS = 100
 
-    # 1. Generate Nodes
-    num_fraud_nodes = int(NUM_NODES * FRAUD_NODE_PERCENTAGE)
-    num_normal_nodes = NUM_NODES - num_fraud_nodes
-    
-    node_ids = np.arange(NUM_NODES)
-    is_fraud = np.zeros(NUM_NODES, dtype=int)
-    fraud_node_indices = np.random.choice(node_ids, num_fraud_nodes, replace=False)
-    is_fraud[fraud_node_indices] = 1
-    
-    # Generate random features
-    features = np.random.rand(NUM_NODES, NUM_FEATURES)
-    
-    # Inject a signal for fraud nodes
-    if num_fraud_nodes > 0:
-        features[fraud_node_indices, 0:3] += np.random.uniform(0.5, 1.0, (num_fraud_nodes, 3))
-    
-    nodes_df = pd.DataFrame(features, columns=[f'feature_{i}' for i in range(NUM_FEATURES)])
-    nodes_df['node_id'] = node_ids
-    nodes_df['is_fraud'] = is_fraud
-    
-    # 2. Generate Transactions (Edges) with TEMPORAL DATA
-    senders = []
-    receivers = []
-    amounts = []
-    timestamps = []
-    is_fraud_transaction = []
-    transaction_types = []  # New: type of transaction
-    
-    normal_node_indices = np.where(is_fraud == 0)[0]
-    
-    # Set time range (100 days)
-    start_time = datetime.now() - timedelta(days=100)
-    
-    # Create fraud rings (dense subgraphs) - THEY FORM GRADUALLY
-    num_fraud_rings = 5
-    if num_fraud_nodes < num_fraud_rings * 2:
-        num_fraud_rings = 1
-        ring_size = num_fraud_nodes
-    else:
-        ring_size = num_fraud_nodes // num_fraud_rings
-        
-    num_ring_transactions = int(NUM_TRANSACTIONS * 0.2)
-    
-    # Fraud rings emerge between day 30-90 (temporal pattern!)
-    for i in range(num_fraud_rings):
-        ring_nodes = fraud_node_indices[i*ring_size : (i+1)*ring_size]
-        if len(ring_nodes) < 2:
-            continue
-        
-        # This ring "activates" at a specific time
-        ring_activation_day = random.randint(30, 70)
-        ring_duration = random.randint(10, 25)
-        
-        for _ in range(num_ring_transactions // num_fraud_rings):
-            sender, receiver = np.random.choice(ring_nodes, 2, replace=False)
-            # Fraud transactions happen AFTER activation
-            days_offset = random.randint(ring_activation_day, ring_activation_day + ring_duration)
-            timestamp = start_time + timedelta(
-                days=days_offset,
-                hours=random.randint(0, 23),
-                minutes=random.randint(0, 59)
-            )
-            
-            senders.append(sender)
-            receivers.append(receiver)
-            amounts.append(np.random.uniform(500, 2000))
-            timestamps.append(timestamp)
-            is_fraud_transaction.append(1)
-            transaction_types.append('ring_internal')
+# ---------------------------------------- #
 
-    # Create 'laundering' transactions (fraud -> normal) - LATE STAGE
-    num_laundering_transactions = int(NUM_TRANSACTIONS * 0.1)
-    if num_fraud_nodes > 0 and len(normal_node_indices) > 0:
-        for _ in range(num_laundering_transactions):
-            # Laundering happens in days 60-100 (after rings are established)
-            days_offset = random.randint(60, 100)
-            timestamp = start_time + timedelta(
-                days=days_offset,
-                hours=random.randint(0, 23),
-                minutes=random.randint(0, 59)
-            )
-            
-            senders.append(np.random.choice(fraud_node_indices))
-            receivers.append(np.random.choice(normal_node_indices))
-            amounts.append(np.random.uniform(100, 1000))
-            timestamps.append(timestamp)
-            is_fraud_transaction.append(1)
-            transaction_types.append('laundering')
+def generate_blockchain_aml_data():
 
-    # Create normal transactions - DISTRIBUTED THROUGHOUT
-    num_normal_transactions = NUM_TRANSACTIONS - len(senders)
-    if len(normal_node_indices) > 1:
-        for _ in range(num_normal_transactions):
-            sender, receiver = np.random.choice(normal_node_indices, 2, replace=False)
-            # Normal transactions happen uniformly across all 100 days
-            days_offset = random.randint(0, 100)
-            timestamp = start_time + timedelta(
-                days=days_offset,
-                hours=random.randint(0, 23),
-                minutes=random.randint(0, 59)
-            )
-            
-            senders.append(sender)
-            receivers.append(receiver)
-            amounts.append(np.random.uniform(10, 200))
-            timestamps.append(timestamp)
-            is_fraud_transaction.append(0)
-            transaction_types.append('normal')
-        
-    transactions_df = pd.DataFrame({
-        'sender_id': senders,
-        'receiver_id': receivers,
-        'amount': amounts,
-        'timestamp': timestamps,
-        'is_fraud_transaction': is_fraud_transaction,
-        'transaction_type': transaction_types
+    # ---------- GLOBAL SCALE ---------- #
+    NUM_WALLETS = random.randint(900, 1400)
+    NUM_TRANSACTIONS_TARGET = random.randint(5000, 8000)
+    FRAUD_WALLET_RATIO = random.uniform(0.05, 0.10)
+
+    start_time = datetime.now() - timedelta(days=TIME_WINDOW_DAYS)
+
+    # ---------- WALLET CREATION ---------- #
+    wallet_ids = [f"0x{uuid.uuid4().hex[:40]}" for _ in range(NUM_WALLETS)]
+
+    is_illicit = np.zeros(NUM_WALLETS, dtype=int)
+    num_illicit = int(NUM_WALLETS * FRAUD_WALLET_RATIO)
+    illicit_indices = np.random.choice(range(NUM_WALLETS), num_illicit, replace=False)
+    is_illicit[illicit_indices] = 1
+
+    first_seen = []
+    last_seen = []
+
+    for i in range(NUM_WALLETS):
+        birth = start_time + timedelta(days=random.randint(0, 60))
+        if is_illicit[i]:
+            death = birth + timedelta(days=random.randint(5, 25))
+        else:
+            death = birth + timedelta(days=random.randint(30, 100))
+        first_seen.append(birth)
+        last_seen.append(death)
+
+    nodes_df = pd.DataFrame({
+        "wallet_id": wallet_ids,
+        "is_illicit_seed": is_illicit,
+        "first_seen": first_seen,
+        "last_seen": last_seen
     })
-    
-    # Sort by timestamp for temporal analysis
-    transactions_df = transactions_df.sort_values('timestamp').reset_index(drop=True)
-    
-    # Add time_step (0-100 for easy slider usage)
-    min_time = transactions_df['timestamp'].min()
-    max_time = transactions_df['timestamp'].max()
-    transactions_df['time_step'] = ((transactions_df['timestamp'] - min_time) / 
-                                     (max_time - min_time) * 100).astype(int)
-    
-    # Save to CSV
+
+    # ---------- TRANSACTION STORAGE ---------- #
+    tx_rows = []
+    block_number = 1000000
+
+    def add_tx(src, dst, amount, time):
+        nonlocal block_number
+        tx_rows.append({
+            "tx_hash": str(uuid.uuid4()),
+            "from_address": src,
+            "to_address": dst,
+            "amount": round(amount, 6),
+            "timestamp": time,
+            "block_number": block_number,
+            "gas_fee": round(amount * random.uniform(0.001, 0.003), 6)
+        })
+        block_number += 1
+
+    # ---------- SMURFING (FAN-OUT) ---------- #
+    illicit_wallets = nodes_df[nodes_df.is_illicit_seed == 1].wallet_id.tolist()
+    normal_wallets = nodes_df[nodes_df.is_illicit_seed == 0].wallet_id.tolist()
+
+    num_sources = max(1, len(illicit_wallets) // 8)
+    smurf_sources = random.sample(illicit_wallets, num_sources)
+
+    laundering_endpoints = []
+
+    for source in smurf_sources:
+
+        smurf_count = random.randint(6, 15)
+        smurfs = random.sample(normal_wallets, smurf_count)
+
+        total_value = random.uniform(4000, 15000)
+        base_amount = total_value / smurf_count
+
+        t0 = start_time + timedelta(days=random.randint(20, 50))
+
+        for smurf in smurfs:
+            amt = base_amount * random.uniform(0.95, 1.05)
+            add_tx(source, smurf, amt, t0 + timedelta(minutes=random.randint(1, 120)))
+            laundering_endpoints.append((smurf, amt, t0))
+
+    # ---------- LAYERING (MULTI-HOP PEELING) ---------- #
+    layered_outputs = []
+
+    for wallet, amount, t in laundering_endpoints:
+        hops = random.choice([2, 3, 4])
+        current_wallet = wallet
+        current_amount = amount
+        current_time = t
+
+        for _ in range(hops):
+            next_wallet = random.choice(normal_wallets)
+            current_amount *= random.uniform(0.95, 0.99)
+            current_time += timedelta(hours=random.randint(1, 12))
+            add_tx(current_wallet, next_wallet, current_amount, current_time)
+            current_wallet = next_wallet
+
+        layered_outputs.append((current_wallet, current_amount, current_time))
+
+    # ---------- AGGREGATION (FAN-IN) ---------- #
+    aggregators = random.sample(normal_wallets, max(2, len(layered_outputs) // 10))
+
+    for agg in aggregators:
+        inbound = random.sample(layered_outputs, random.randint(4, 10))
+        for src, amt, t in inbound:
+            add_tx(src, agg, amt * random.uniform(0.97, 1.0),
+                   t + timedelta(hours=random.randint(2, 24)))
+
+    # ---------- NORMAL TRAFFIC ---------- #
+    while len(tx_rows) < NUM_TRANSACTIONS_TARGET:
+        src, dst = random.sample(normal_wallets, 2)
+        t = start_time + timedelta(days=random.randint(0, TIME_WINDOW_DAYS))
+        amt = random.uniform(5, 300)
+        add_tx(src, dst, amt, t)
+
+    tx_df = pd.DataFrame(tx_rows)
+    tx_df = tx_df.sort_values("timestamp").reset_index(drop=True)
+
+    # ---------- SAVE ---------- #
     nodes_df.to_csv(NODES_FILE, index=False)
-    transactions_df.to_csv(TRANSACTIONS_FILE, index=False)
-    
+    tx_df.to_csv(TRANSACTIONS_FILE, index=False)
+
     return {
-        "nodes": NUM_NODES,
-        "transactions": len(transactions_df),
-        "fraudulent_nodes": num_fraud_nodes,
-        "time_range_days": 100,
-        "fraud_rings": num_fraud_rings
+        "wallets": NUM_WALLETS,
+        "transactions": len(tx_df),
+        "illicit_seeds": num_illicit,
+        "smurf_sources": len(smurf_sources),
+        "aggregators": len(aggregators)
     }
 
+
 if __name__ == "__main__":
-    stats = generate_synthetic_data()
-    print(f"Data generated: {stats}")
+    stats = generate_blockchain_aml_data()
+    print("Blockchain AML dataset generated:")
+    print(stats)
